@@ -1475,23 +1475,70 @@
             
             let currentIndex = 0;
 
+            // Get currently visible items — handles GSAP display:none and opacity:0
+            const getVisibleItems = () => projectItems.filter(item => {
+                const d = item.style.display;
+                const o = parseFloat(item.style.opacity);
+                return d !== 'none' && (isNaN(o) || o > 0.1);
+            });
+
+            // Get the real src of a project-item's image (works with lazy-loaded imgs)
+            const getImgSrc = (item) => {
+                const img = item.querySelector('img');
+                // data-src is set for lazy images before they load; fallback to src
+                return img.getAttribute('data-src') || img.currentSrc || img.src;
+            };
+
+            // Preload an image in the background for instant display
+            const preload = (src) => { if (src) { const i = new Image(); i.src = src; } };
+
             const openLightbox = (index) => {
-                const visibleItems = projectItems.filter(item => item.style.display !== 'none');
+                const visibleItems = getVisibleItems();
+                if (!visibleItems.length) return;
+                // Clamp index in bounds
+                index = (index + visibleItems.length) % visibleItems.length;
                 const item = visibleItems[index];
                 if (!item) return;
 
                 currentIndex = index;
-                const img = item.querySelector('img');
+                const imgSrc = getImgSrc(item);
+                const imgAlt = item.querySelector('img').alt;
                 const category = item.querySelector('.label-caps').textContent;
                 const title = item.querySelector('h3').textContent;
 
-                lightboxImg.src = img.src;
-                lightboxImg.alt = img.alt;
-                lightboxCategory.textContent = category;
-                lightboxTitle.textContent = title;
+                // Fade out → swap src → fade in for smooth transition
+                lightboxImg.style.opacity = '0';
+                lightboxImg.style.transition = 'opacity 0.2s ease';
 
-                lightbox.classList.add('active');
-                document.body.style.overflow = 'hidden'; 
+                const doSwap = () => {
+                    lightboxImg.src = imgSrc;
+                    lightboxImg.alt = imgAlt;
+                    lightboxCategory.textContent = category;
+                    lightboxTitle.textContent = title;
+                    lightboxImg.onload = () => {
+                        lightboxImg.style.opacity = '1';
+                        lightboxImg.onload = null;
+                    };
+                    // Fallback in case image is already cached
+                    if (lightboxImg.complete && lightboxImg.naturalWidth > 0) {
+                        lightboxImg.style.opacity = '1';
+                    }
+                };
+
+                if (lightbox.classList.contains('active')) {
+                    setTimeout(doSwap, 200);
+                } else {
+                    doSwap();
+                    lightbox.classList.add('active');
+                }
+
+                document.body.style.overflow = 'hidden';
+
+                // Preload neighbours for instant forward/back
+                const next = visibleItems[(index + 1) % visibleItems.length];
+                const prev = visibleItems[(index - 1 + visibleItems.length) % visibleItems.length];
+                if (next) preload(getImgSrc(next));
+                if (prev) preload(getImgSrc(prev));
             };
 
             const closeLightbox = () => {
@@ -1500,20 +1547,20 @@
             };
 
             const showNext = () => {
-                const visibleItems = projectItems.filter(item => item.style.display !== 'none');
+                const visibleItems = getVisibleItems();
                 currentIndex = (currentIndex + 1) % visibleItems.length;
                 openLightbox(currentIndex);
             };
 
             const showPrev = () => {
-                const visibleItems = projectItems.filter(item => item.style.display !== 'none');
+                const visibleItems = getVisibleItems();
                 currentIndex = (currentIndex - 1 + visibleItems.length) % visibleItems.length;
                 openLightbox(currentIndex);
             };
 
             projectItems.forEach((item) => {
                 item.addEventListener('click', () => {
-                    const visibleItems = projectItems.filter(item => item.style.display !== 'none');
+                    const visibleItems = getVisibleItems();
                     const index = visibleItems.indexOf(item);
                     openLightbox(index);
                 });
