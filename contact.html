@@ -182,21 +182,6 @@
 
     <script src="./js/main.js"></script>
     <script>
-        // Form submission handling
-        const form = document.getElementById('contact-form');
-        const successMsg = document.getElementById('form-success');
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            // Simple animation for submission
-            gsap.to(form, { opacity: 0, y: -20, duration: 0.5, onComplete: () => {
-                form.style.display = 'none';
-                successMsg.style.display = 'block';
-                gsap.from(successMsg, { opacity: 0, y: 20, duration: 0.5 });
-            }});
-        });
-
         // Focus effects on inputs
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
