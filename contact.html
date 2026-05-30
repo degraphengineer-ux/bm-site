@@ -203,6 +203,11 @@
                     form.requestSubmit();
                 }
             });
+
+            form.addEventListener('submit', () => {
+                // Clear the form fields after the browser starts submission
+                window.requestAnimationFrame(() => form.reset());
+            });
         }
     </script>
 </body>
