@@ -1,4 +1,4 @@
-// Main JS for M.I Photography
+// Main JS for M.1 Photography
 
 document.addEventListener('DOMContentLoaded', () => {
     initLenis();
