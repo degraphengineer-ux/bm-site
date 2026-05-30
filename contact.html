@@ -182,6 +182,8 @@
 
     <script src="./js/main.js"></script>
     <script>
+        const form = document.getElementById('contact-form');
+
         // Focus effects on inputs
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
@@ -192,6 +194,16 @@
                 gsap.to(input, { borderBottomColor: '#e5e2e1', duration: 0.3 });
             });
         });
+
+        // Submit form when user presses Enter (except inside textarea)
+        if (form) {
+            form.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.target.tagName.toLowerCase() !== 'textarea') {
+                    e.preventDefault();
+                    form.requestSubmit();
+                }
+            });
+        }
     </script>
 </body>
 </html>
